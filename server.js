@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- GROQ AI SETUP (Bahut Fast & Free) ---
+// GROQ AI SETUP
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Database Connection
@@ -68,7 +68,7 @@ app.post('/api/chat', async (req, res) => {
 
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: aiPrompt }],
-                model: "llama3-8b-8192"
+                model: "llama-3.3-70b-versatile"
             });
             
             botReply = chatCompletion.choices[0].message.content;
