@@ -5,6 +5,7 @@ require('dotenv').config();
 const Groq = require('groq-sdk');
 
 const app = express();
+setInterval(() => console.log("Bot is awake..."), 10000); // 10 sec me bot ko jagayega
 app.use(cors());
 app.use(express.json());
 
