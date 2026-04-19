@@ -31,6 +31,19 @@ const User = mongoose.model('User', UserSchema);
 const Customer = mongoose.model('Customer', CustomerSchema);
 
 // --- BOT LOGIC ---
+// META WEBHOOK VERIFICATION
+app.get('/api/chat', (req, res) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode === 'subscribe' && token === 'rituraj_bot_123') {
+        console.log('✅ Webhook Verified by Meta!');
+        res.status(200).send(challenge);
+    } else {
+        res.sendStatus(403);
+    }
+});
 app.post('/api/chat', async (req, res) => {
     try {
         const ownerPhone = "9999999999";
