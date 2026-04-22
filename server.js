@@ -5,6 +5,14 @@ require('dotenv').config();
 const Groq = require('groq-sdk');
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
+app.get('/api/chat', (req, res) => {
+    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === 'my_secret_token_123') {
+        res.send(req.query['hub.challenge']);
+    } else {
+        res.sendStatus(403);
+    }
+});
 setInterval(() => console.log("Bot is awake..."), 10000); // 10 sec me bot ko jagayega
 app.use(cors());
 app.use(express.json());
