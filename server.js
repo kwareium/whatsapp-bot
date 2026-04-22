@@ -5,17 +5,9 @@ require('dotenv').config();
 const Groq = require('groq-sdk');
 
 const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.get('/api/chat', (req, res) => {
-    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === 'my_secret_token_123') {
-        res.send(req.query['hub.challenge']);
-    } else {
-        res.sendStatus(403);
-    }
-});
-setInterval(() => console.log("Bot is awake..."), 10000); // 10 sec me bot ko jagayega
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // GROQ AI SETUP
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -39,20 +31,17 @@ const CustomerSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const Customer = mongoose.model('Customer', CustomerSchema);
 
-// --- BOT LOGIC ---
-// META WEBHOOK VERIFICATION
-app.get('/api/chat', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode === 'subscribe' && token === 'rituraj_bot_123') {
-        console.log('✅ Webhook Verified by Meta!');
-        res.status(200).send(challenge);
+// --- 1. WEBHOOK VERIFICATION (Gupshup/Meta ye call karega) ---
+app.get('/webhook', (req, res) => {
+    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === 'my_secret_token_123') {
+        console.log('✅ Webhook Verified!');
+        res.send(req.query['hub.challenge']);
     } else {
         res.sendStatus(403);
     }
 });
+
+// --- 2. BOT LOGIC (Message aane par ye chalega) ---
 app.post('/api/chat', async (req, res) => {
     try {
         const ownerPhone = "9999999999";
@@ -77,10 +66,8 @@ app.post('/api/chat', async (req, res) => {
         let botReply = "";
 
         if (keywordMatch) {
-            // Keyword match hua -> Direct Database se jawab do
             botReply = `Aapne pucha hai ${keywordMatch.name}. Iska price hai ₹${keywordMatch.price}. Kya aap isko order karna chahte hain?`;
         } else {
-            // Keyword nahi mila -> Groq AI ko bhejo
             let contextData = "Koi product nahi mila.";
             if (ownerData && ownerData.products.length > 0) {
                 contextData = JSON.stringify(ownerData.products);
@@ -106,7 +93,6 @@ app.post('/api/chat', async (req, res) => {
         await customerData.save();
 
         console.log(`💬 Cust: ${originalMessage} | 🤖 Bot: ${botReply}`);
-
         res.status(200).json({ reply: botReply });
 
     } catch (error) {
@@ -115,7 +101,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// --- PRODUCT ADD API ---
+// --- 3. PRODUCT ADD API ---
 app.post('/api/add-product', async (req, res) => {
     try {
         const { ownerPhone, name, price, keywords } = req.body;
